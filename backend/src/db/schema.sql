@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   display_name      TEXT,
   bio               TEXT,
   skills            TEXT[]    NOT NULL DEFAULT '{}',
+  portfolio_items   JSONB     NOT NULL DEFAULT '[]'::jsonb,
+  availability      JSONB,
   role              TEXT      NOT NULL DEFAULT 'both',
   completed_jobs    INTEGER   NOT NULL DEFAULT 0,
   total_earned_xlm  NUMERIC(20,7) NOT NULL DEFAULT 0,
@@ -15,6 +17,12 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS portfolio_items JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS availability JSONB;
 
 -- ─────────────────────────────────────────
 -- jobs
@@ -32,6 +40,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   escrow_contract_id  TEXT,
   applicant_count     INTEGER     NOT NULL DEFAULT 0,
   deadline            TIMESTAMPTZ,
+  timezone            TEXT,
+  screening_questions TEXT[]      NOT NULL DEFAULT '{}',
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
