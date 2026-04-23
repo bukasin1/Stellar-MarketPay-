@@ -22,6 +22,7 @@ export interface Job {
   updatedAt: string;
   deadline?: string;
   timezone?: string;     // IANA timezone string (e.g., "America/New_York")
+  screeningQuestions?: string[];  // Up to 5 screening questions
 }
 
 export interface Application {
@@ -31,6 +32,7 @@ export interface Application {
   proposal: string;
   bidAmount: string;     // XLM amount as string
   status: "pending" | "accepted" | "rejected";
+  screeningAnswers?: Record<string, string>;  // Question -> Answer mapping
   createdAt: string;
 }
 
