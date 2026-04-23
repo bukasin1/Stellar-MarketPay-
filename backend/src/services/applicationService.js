@@ -32,6 +32,7 @@ function rowToApp(row) {
     freelancerTier:    calculateFreelancerTier(completedJobs, freelancerRating),
     proposal:          row.proposal,
     bidAmount:         row.bid_amount,
+    currency:          row.currency || 'XLM',
     status:            row.status,
     createdAt:         row.created_at,
   };
@@ -39,7 +40,7 @@ function rowToApp(row) {
 
 // ─── service functions ───────────────────────────────────────────────────────
 
-async function submitApplication({ jobId, freelancerAddress, proposal, bidAmount }) {
+async function submitApplication({ jobId, freelancerAddress, proposal, bidAmount, currency = 'XLM' }) {
   validatePublicKey(freelancerAddress);
 
   // Validate the job (throws 404 if missing)
@@ -61,11 +62,11 @@ async function submitApplication({ jobId, freelancerAddress, proposal, bidAmount
   // Insert; the UNIQUE(job_id, freelancer_address) constraint handles duplicates.
   let appRow;
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO applications (job_id, freelancer_address, proposal, bid_amount, status, created_at)
-       VALUES ($1, $2, $3, $4, 'pending', NOW())
+    const { rows } = await query(
+      `INSERT INTO applications (job_id, freelancer_address, proposal, bid_amount, currency, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
        RETURNING *`,
-      [jobId, freelancerAddress, proposal.trim(), parseFloat(bidAmount).toFixed(7)]
+      [jobId, freelancerAddress, proposal.trim(), parseFloat(bidAmount).toFixed(7), currency]
     );
     appRow = rows[0];
   } catch (err) {
