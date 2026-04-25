@@ -646,7 +646,7 @@ export default function JobDetail({ publicKey, onConnect }: JobDetailProps) {
                       <div class="invoice-title">INVOICE</div>
                       <div class="invoice-number">
                         <div><strong>${invoiceNumber}</strong></div>
-                        <div>Date: ${formatDate(new Date())}</div>
+                        <div>Date: ${formatDate(new Date().toISOString())}</div>
                         <div>Job ID: ${job.id}</div>
                       </div>
                     </div>
@@ -682,15 +682,15 @@ export default function JobDetail({ publicKey, onConnect }: JobDetailProps) {
                       </div>
                       <div class="detail-row">
                         <span class="detail-label">Amount:</span>
-                        <span>${formatXLM(job.budgetAmount || 0)}</span>
+                        <span>${formatXLM(job.budget || '0')}</span>
                       </div>
                       <div class="detail-row">
                         <span class="detail-label">Completion Date:</span>
-                        <span>${formatDate(new Date())}</span>
+                        <span>${formatDate(new Date().toISOString())}</span>
                       </div>
                       <div class="amount-row">
                         <span>Total Due:</span>
-                        <span>${formatXLM(job.budgetAmount || 0)}</span>
+                        <span>${formatXLM(job.budget || '0')}</span>
                       </div>
                     </div>
 
@@ -717,7 +717,6 @@ export default function JobDetail({ publicKey, onConnect }: JobDetailProps) {
           </button>
         </div>
       )}
-    </div>
 
       {showShareModal && job && (
         <ShareJobModal
