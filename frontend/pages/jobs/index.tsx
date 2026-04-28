@@ -11,12 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { getTimezoneOffset, toZonedTime } from "date-fns-tz";
-import { useTranslation } from "@/lib/i18n";
 
-interface Suggestion {
-  type: 'title' | 'skill' | 'category';
-  value: string;
-}
 
 export default function JobsPage() {
   const router = useRouter();
@@ -34,15 +29,7 @@ export default function JobsPage() {
   const [useGeolocation, setUseGeolocation] = useState<boolean>(false);
   const [geoLoading, setGeoLoading] = useState<boolean>(false);
   const [geoError, setGeoError] = useState<string | null>(null);
-  
-  // Autocomplete states
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeSuggestion, setActiveSuggestion] = useState(0);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
 
   const category = (router.query.category as string) || "";
   const status = (router.query.status as string) || "open";
@@ -54,6 +41,9 @@ export default function JobsPage() {
   useEffect(() => {
     const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     setUserTimezone(detectedTz);
+    getConnectedPublicKey().then((publicKey) => {
+      if (publicKey) setViewerAddress(publicKey);
+    }).catch(() => {});
   }, []);
 
   // Handle geolocation-based timezone detection
@@ -107,6 +97,7 @@ export default function JobsPage() {
             limit: 20,
             cursor,
             timezone: activeTimezone || undefined,
+            viewerAddress: viewerAddress || undefined,
           });
 
           const seenIds = new Set(allJobs.map((job) => job.id));
@@ -134,7 +125,7 @@ export default function JobsPage() {
     loadJobs();
 
     return () => { isCancelled = true; };
-  }, [category, status, pageFromQuery, router.isReady, manualTimezone, useGeolocation, userTimezone]);
+  }, [category, status, pageFromQuery, router.isReady, manualTimezone, useGeolocation, userTimezone, viewerAddress]);
 
   // Fetch suggestions with debounce
   const fetchSuggestions = useCallback(async (query: string) => {
@@ -263,6 +254,7 @@ export default function JobsPage() {
         limit: 20,
         cursor: nextCursor,
         timezone: activeTimezone || undefined,
+        viewerAddress: viewerAddress || undefined,
       });
 
       setJobs((prev) => {

@@ -57,11 +57,26 @@ CREATE INDEX IF NOT EXISTS jobs_created_at_idx      ON jobs(created_at DESC);
 
 ALTER TABLE jobs
   ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'XLM',
+  ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public',
   ADD COLUMN IF NOT EXISTS share_count INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS boosted BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS boosted_until TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS timezone TEXT,
   ADD COLUMN IF NOT EXISTS screening_questions TEXT[] NOT NULL DEFAULT '{}';
+
+-- enforce valid visibility values for all rows
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'jobs_visibility_check'
+  ) THEN
+    ALTER TABLE jobs
+      ADD CONSTRAINT jobs_visibility_check
+      CHECK (visibility IN ('public', 'private', 'invite_only'));
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────
 -- applications
@@ -209,21 +224,5 @@ CREATE INDEX IF NOT EXISTS contract_events_job_id_idx ON contract_events(job_id)
 CREATE INDEX IF NOT EXISTS contract_events_created_at_idx ON contract_events(created_at DESC);
 
 -- ─────────────────────────────────────────
--- admin_profiles (Issue #195 - 2FA support)
--- ─────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS admin_profiles (
-  id                  TEXT PRIMARY KEY,              -- Stellar public key
-  email               TEXT,
-  totp_secret         TEXT,                          -- Encrypted TOTP secret
-  totp_enabled        BOOLEAN NOT NULL DEFAULT FALSE,
-  backup_codes        TEXT,                          -- JSON string of backup codes
-  totp_attempts       INTEGER NOT NULL DEFAULT 0,
-  totp_locked_until   TIMESTAMPTZ,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
 
-INSERT INTO admin_profiles (id, email)
-SELECT 'GXXXPLACEHOLDER', 'admin@stellarmarketpay.com'
-WHERE NOT EXISTS (SELECT 1 FROM admin_profiles WHERE id = 'GXXXPLACEHOLDER');
 
